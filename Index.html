@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ruleta de Premios</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700;9..144,900&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --wood-a:#efe0c8; --wood-b:#e2cdac; --grain:rgba(160,120,70,.07);
+  --ink:#3b2f24; --ink-soft:#7a6a58; --card:#fffaf1; --accent:#e0795a; --accent-2:#c85f42;
+  --rim:#fffaf1; --shadow:rgba(90,60,30,.25);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --wood-a:#efe0c8; --wood-b:#e2cdac; --grain:rgba(160,120,70,.07);
+  }
+}
+:root[data-theme="dark"]{--wood-a:#efe0c8; --wood-b:#e2cdac; --grain:rgba(160,120,70,.07);}
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%;margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  font-family:'Nunito',system-ui,sans-serif;color:var(--ink);
+  background:
+    repeating-linear-gradient(92deg,transparent 0 22px,var(--grain) 22px 23px,transparent 23px 61px,var(--grain) 61px 62px),
+    radial-gradient(ellipse at 50% 38%,rgba(255,250,240,.6),transparent 65%),
+    linear-gradient(180deg,var(--wood-a),var(--wood-b));
+  background-color:var(--wood-a);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:clamp(14px,3vh,28px);padding:20px 16px;overflow-x:hidden;min-height:100%;
+}
+header{text-align:center}
+h1{font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:clamp(1.9rem,6vw,3.2rem);margin:0;line-height:1.05;letter-spacing:-.01em}
+header p{margin:8px 0 0;color:var(--ink-soft);font-weight:700;font-size:clamp(.95rem,2.6vw,1.1rem)}
+.stage{position:relative;width:min(88vw,470px,58vh);aspect-ratio:1;filter:drop-shadow(0 18px 24px var(--shadow))}
+.pointer{position:absolute;top:-14px;left:50%;width:38px;height:46px;transform:translateX(-50%);z-index:3;
+  filter:drop-shadow(0 3px 3px rgba(0,0,0,.25));transform-origin:50% 20%}
+.pointer.tick{animation:tick .12s ease-out}
+@keyframes tick{50%{transform:translateX(-50%) rotate(-14deg)}}
+#wheel{width:100%;height:100%;border-radius:50%;transition:transform 5.5s cubic-bezier(.12,.72,.08,1);will-change:transform}
+.hub{position:absolute;inset:50% auto auto 50%;width:17%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#fff,var(--rim) 60%,#eadfcb);box-shadow:0 2px 8px var(--shadow),inset 0 -3px 6px rgba(0,0,0,.08);
+  display:grid;place-items:center;font-size:clamp(1.1rem,4.5vw,1.8rem);z-index:2}
+#spin{
+  font:800 clamp(1.05rem,3.6vw,1.35rem)/1.1 'Nunito',system-ui,sans-serif;color:#fff;border:0;cursor:pointer;
+  padding:18px 34px;border-radius:999px;background:linear-gradient(180deg,#ec8a6b,var(--accent-2));
+  box-shadow:0 6px 0 #a94c33,0 14px 22px rgba(168,76,51,.35);transition:transform .12s,box-shadow .12s,opacity .2s;
+  animation:pulse 2.2s ease-in-out infinite;max-width:92vw
+}
+#spin:hover{transform:translateY(-2px)}
+#spin:active{transform:translateY(4px);box-shadow:0 2px 0 #a94c33,0 6px 10px rgba(168,76,51,.3)}
+#spin:disabled{animation:none;opacity:.6;cursor:not-allowed;transform:translateY(3px);box-shadow:0 3px 0 #a94c33}
+#spin:focus-visible,.close:focus-visible{outline:3px solid var(--ink);outline-offset:4px}
+@keyframes pulse{50%{transform:scale(1.04)}}
+.note{font-size:.85rem;color:var(--ink-soft);font-weight:700;text-align:center;max-width:420px;margin:0}
+.wm{position:fixed;left:calc(12px + env(safe-area-inset-left,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));font-size:14px;font-weight:800;opacity:.5;letter-spacing:.08em;pointer-events:none;user-select:none}
+/* Pop-up */
+.overlay{position:fixed;inset:0;background:rgba(59,47,36,.55);backdrop-filter:blur(3px);display:grid;place-items:center;padding:20px;
+  opacity:0;pointer-events:none;transition:opacity .3s;z-index:20}
+.overlay.show{opacity:1;pointer-events:auto}
+.card{background:var(--card);border-radius:28px;padding:30px 26px 24px;max-width:400px;width:100%;text-align:center;
+  box-shadow:0 30px 60px rgba(0,0,0,.35);transform:scale(.8) translateY(20px);transition:transform .45s cubic-bezier(.34,1.56,.64,1);position:relative}
+.overlay.show .card{transform:none}
+.emoji{font-size:3.6rem;line-height:1;display:block;animation:bounce 1s ease-in-out infinite}
+@keyframes bounce{50%{transform:translateY(-8px) rotate(-6deg)}}
+.card h2{font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:1.7rem;margin:12px 0 4px}
+.prize{font-weight:800;font-size:1.25rem;color:var(--accent-2);margin:0 0 12px}
+.cond{margin:0 0 18px;color:var(--ink);line-height:1.5;font-weight:600}
+.ticket{border:2px dashed #d9c6a5;border-radius:16px;padding:10px 12px;font-size:.85rem;color:var(--ink-soft);font-weight:700;margin-bottom:18px}
+.close{font:800 1rem 'Nunito',sans-serif;background:var(--ink);color:#fff;border:0;border-radius:999px;padding:13px 28px;cursor:pointer}
+body.locked .stage,body.locked #spin,body.locked .note,body.locked header p{display:none}
+.lock{display:none;background:var(--card);border-radius:28px;padding:34px 28px;max-width:420px;width:100%;text-align:center;box-shadow:0 20px 44px var(--shadow)}
+body.locked .lock{display:block}
+.lock .emoji{animation:none}
+.lock h2{font-family:'Fraunces',Georgia,serif;font-weight:900;font-size:1.7rem;margin:14px 0 10px}
+.lock p{margin:0;line-height:1.55;font-weight:600;color:var(--ink-soft)}
+.shot{font-size:.78rem;color:var(--ink-soft);font-weight:700;margin:0 0 16px}
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30}
+@media (prefers-reduced-motion:reduce){#spin,.emoji{animation:none}#wheel{transition-duration:1.5s}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Ruleta de premios</h1>
+  <p>¡Gira y descubre tu premio para la siguiente!</p>
+</header>
+
+<div class="stage">
+  <svg class="pointer" id="pointer" viewBox="0 0 38 46" aria-hidden="true"><path d="M19 46 3 14a17 17 0 1 1 32 0z" fill="#c85f42" stroke="#fffaf1" stroke-width="3"/><circle cx="19" cy="14" r="5" fill="#fffaf1"/></svg>
+  <svg id="wheel" viewBox="-100 -100 200 200" role="img" aria-label="Ruleta con seis premios"></svg>
+  <div class="hub" aria-hidden="true">🍽️</div>
+</div>
+
+<button id="spin" type="button">¡Gira y descubre tu premio!</button>
+<section class="lock" id="lock" aria-live="polite">
+  <span class="emoji">🌟</span>
+  <h2>¡Ya has participado hoy!</h2>
+  <p>Recuerda que se permite solo un intento al día por cliente para que todos puedan jugar. ¡Te esperamos mañana!</p>
+</section>
+<p class="note">Todos los premios se canjean con una consumición mínima, según la condición indicada.</p>
+
+<div class="wm">jnfc</div>
+
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="t">
+  <div class="card">
+    <span class="emoji" id="pe">🎉</span>
+    <h2 id="t">¡Felicidades!</h2>
+    <p class="prize" id="pn"></p>
+    <p class="cond" id="pc"></p>
+    <div class="ticket" id="pv"></div>
+    <p class="shot">📸 Haz una captura de pantalla para guardarlo.</p>
+    <button class="close" id="close" type="button">Cerrar</button>
+  </div>
+</div>
+<canvas id="confetti"></canvas>
+
+<script>
+const PRIZES=[
+  {short:"10% dto.",emoji:"🏷️",name:"10% de descuento en tu siguiente comida",cond:"Muestra esta pantalla al pedir tu comida y disfruta de un 10% de descuento."},
+  {short:"2 bebidas gratis",emoji:"🍹",name:"2 bebidas gratis con tu comida",cond:"Muestra esta pantalla a nuestro equipo al pedir tu comida para disfrutar de tus 2 bebidas gratis."},
+  {short:"Bebida desayuno",emoji:"🥐",name:"Bebida gratis con tu desayuno",cond:"Pide cualquier desayuno y te invitamos a una bebida. Muestra esta pantalla al pedir."},
+  {short:"Postre gratis",emoji:"🍰",name:"Postre gratis con 2 menús",cond:"Pide 2 menús y el postre corre de nuestra cuenta. Muestra esta pantalla al pedir."},
+  {short:"Café merienda",emoji:"☕",name:"Café gratis con tu merienda",cond:"Pide tu merienda y te acompañamos con un café gratis. Muestra esta pantalla al pedir."},
+  {short:"Entrante cena",emoji:"🥗",name:"Entrante gratis con tu cena",cond:"Pide tu cena y el entrante va por la casa. Muestra esta pantalla al pedir."}
+];
+const COLORS=["#f6c9b8","#cfe3d4","#f8e3a8","#c8d9ee","#e3cbe6","#f9d3dc"];
+const INK=["#6b3a2a","#2f5a3e","#6e5410","#2b4a73","#593a63","#7a3447"];
+const N=PRIZES.length,SEG=360/N,R=96;
+const wheel=document.getElementById('wheel');
+const pt=(a,r)=>{const t=(a-90)*Math.PI/180;return[(r*Math.cos(t)).toFixed(2),(r*Math.sin(t)).toFixed(2)]};
+
+let svg=`<circle r="99" fill="#fffaf1"/>`;
+PRIZES.forEach((p,i)=>{
+  const a0=i*SEG,a1=a0+SEG,[x0,y0]=pt(a0,R),[x1,y1]=pt(a1,R),mid=a0+SEG/2;
+  svg+=`<path d="M0 0L${x0} ${y0}A${R} ${R} 0 0 1 ${x1} ${y1}Z" fill="${COLORS[i]}" stroke="#fffaf1" stroke-width="1.5"/>`;
+  svg+=`<g transform="rotate(${mid})"><text x="0" y="-60" font-size="27" text-anchor="middle" dominant-baseline="central">${p.emoji}</text></g>`;
+});
+for(let i=0;i<N;i++){const[x,y]=pt(i*SEG,97);svg+=`<circle cx="${x}" cy="${y}" r="1.6" fill="#e0795a"/>`}
+wheel.innerHTML=svg;
+
+const KEY='ruleta_ultimo_giro',DAY=24*60*60*1000;
+function yaGiro(){
+  try{const t=parseInt(localStorage.getItem(KEY),10);return Number.isFinite(t)&&(Date.now()-t)<DAY}catch(e){return false}
+}
+function guardarGiro(){try{localStorage.setItem(KEY,String(Date.now()))}catch(e){}}
+if(yaGiro())document.body.classList.add('locked');
+
+let rotation=0,spinning=false,tickTimer=null;
+const btn=document.getElementById('spin'),ptr=document.getElementById('pointer');
+const overlay=document.getElementById('overlay');
+
+function getAngle(){
+  const m=new DOMMatrix(getComputedStyle(wheel).transform);
+  return (Math.atan2(m.b,m.a)*180/Math.PI+360)%360;
+}
+function startTicks(){
+  let last=-1;
+  const loop=()=>{
+    if(!spinning)return;
+    const idx=Math.floor(((360-getAngle())%360)/SEG);
+    if(last!==-1&&idx!==last){ptr.classList.remove('tick');void ptr.getBoundingClientRect();ptr.classList.add('tick')}
+    last=idx;tickTimer=requestAnimationFrame(loop);
+  };loop();
+}
+
+btn.addEventListener('click',()=>{
+  if(spinning)return;
+  spinning=true;btn.disabled=true;btn.textContent="Girando…";
+  guardarGiro();
+  const win=Math.floor(Math.random()*N);
+  const center=win*SEG+SEG/2;
+  const jitter=(Math.random()-.5)*SEG*.6;
+  const base=rotation-(rotation%360);
+  rotation=base+360*6+(360-center)+jitter;
+  wheel.style.transform=`rotate(${rotation}deg)`;
+  startTicks();
+  setTimeout(()=>{spinning=false;cancelAnimationFrame(tickTimer);showPrize(PRIZES[win])},5700);
+});
+
+function showPrize(p){
+  document.getElementById('pe').textContent=p.emoji;
+  document.getElementById('pn').textContent=p.name;
+  document.getElementById('pc').textContent="¡Felicidades! "+p.cond;
+  const d=new Date(),fin=new Date(d);
+  fin.setMonth(fin.getMonth()+1);if(fin.getDate()!==d.getDate())fin.setDate(0);
+  const f=x=>x.toLocaleDateString('es-ES',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('pv').innerHTML='Muestra esta pantalla al pedir.<br><strong>Válido del '+f(d)+' al '+f(fin)+'</strong>';
+  overlay.classList.add('show');
+  burst();
+  document.getElementById('close').focus();
+}
+function closeModal(){
+  overlay.classList.remove('show');
+  document.body.classList.add('locked');
+}
+document.getElementById('close').addEventListener('click',closeModal);
+overlay.addEventListener('click',e=>{if(e.target===overlay)closeModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay.classList.contains('show'))closeModal()});
+
+/* Confeti */
+const cv=document.getElementById('confetti'),cx=cv.getContext('2d');
+let parts=[],raf=null;
+function size(){cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio}
+addEventListener('resize',size);size();
+function burst(){
+  const cols=["#e0795a","#f8c85a","#7fbf9a","#7fa6d9","#c993d6","#f291a8"];
+  const d=devicePixelRatio;
+  for(let i=0;i<170;i++){
+    const side=i%2?1:-1;
+    parts.push({x:(innerWidth/2+side*innerWidth*.1)*d,y:innerHeight*.55*d,
+      vx:(Math.random()*9+2)*(side)*(Math.random()>.3?1:-.5)*d,vy:-(Math.random()*16+8)*d,
+      w:(Math.random()*8+5)*d,h:(Math.random()*5+4)*d,rot:Math.random()*6,vr:(Math.random()-.5)*.4,
+      c:cols[Math.floor(Math.random()*cols.length)],life:0});
+  }
+  if(!raf)raf=requestAnimationFrame(frame);
+}
+function frame(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  parts.forEach(p=>{p.vy+=.35*devicePixelRatio;p.vx*=.992;p.x+=p.vx;p.y+=p.vy;p.rot+=p.vr;p.life++;
+    cx.save();cx.translate(p.x,p.y);cx.rotate(p.rot);cx.fillStyle=p.c;
+    cx.globalAlpha=Math.max(0,1-p.life/200);cx.fillRect(-p.w/2,-p.h/2,p.w,p.h);cx.restore()});
+  parts=parts.filter(p=>p.life<200&&p.y<cv.height+50);
+  raf=parts.length?requestAnimationFrame(frame):null;
+  if(!parts.length)cx.clearRect(0,0,cv.width,cv.height);
+}
+</script>
+</body>
+</html>
